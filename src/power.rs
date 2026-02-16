@@ -1,6 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use sysinfo::System;
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
 /// Per-process power consumption estimate.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,14 +50,18 @@ impl PowerReport {
 /// This is an approximation: we assume total system TDP and distribute
 /// power proportionally to CPU usage. On macOS with `powermetrics`,
 /// more accurate data could be obtained (requires sudo).
-const ESTIMATED_TDP_WATTS: f64 = 30.0;
+// Apple Silicon M3 MacBook Air TDP is ~15-24W (22W typical sustained)
+const ESTIMATED_TDP_WATTS: f64 = 22.0;
 
 pub fn get_power_report(system_power_draw: Option<f64>) -> Result<PowerReport> {
-    let mut sys = System::new_all();
+    let refresh_kind = RefreshKind::nothing()
+        .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
+        .with_processes(sysinfo::ProcessRefreshKind::nothing().with_cpu().with_memory());
+    let mut sys = System::new_with_specifics(refresh_kind);
     // Refresh twice with a small delay for accurate CPU measurements
-    sys.refresh_all();
-    std::thread::sleep(std::time::Duration::from_millis(500));
-    sys.refresh_all();
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
     let tdp = system_power_draw.unwrap_or(ESTIMATED_TDP_WATTS);
 
@@ -176,8 +180,23 @@ fn get_linux_power_draw() -> Option<f64> {
 }
 
 fn get_macos_power_draw() -> Option<f64> {
-    // On macOS, we could parse `pmset -g rawlog` or use IOKit, but that's complex.
-    // For now, return None and rely on the TDP estimation.
+    // Parse pmset -g batt for wattage info (e.g., "(id=1234567) ... ; ... present: true")
+    let output = std::process::Command::new("system_profiler")
+        .args(["SPPowerDataType"])
+        .output()
+        .ok()?;
+    let text = String::from_utf8_lossy(&output.stdout);
+    // Look for "Wattage (W):" line
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("Wattage") || trimmed.contains("Wattage") {
+            if let Some(val_str) = trimmed.split(':').nth(1) {
+                if let Ok(watts) = val_str.trim().parse::<f64>() {
+                    return Some(watts);
+                }
+            }
+        }
+    }
     None
 }
 

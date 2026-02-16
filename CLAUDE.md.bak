@@ -1,0 +1,59 @@
+# batteryctl - Battery health and power management
+
+> macOS command-line utility (Rust)
+
+## Project Overview
+
+**Type:** Command-line utility (Rust)
+**Purpose:** Battery health and power management
+**Platform:** macOS (Apple Silicon & Intel)
+
+## Features
+
+- Battery health monitoring
+- Charge cycle tracking
+- Charging status and rate
+- Power consumption analysis
+- Battery temperature monitoring
+- Estimated runtime calculations
+
+## Development
+
+```bash
+# Build
+cargo build
+
+# Run
+cargo run -- [ARGS]
+
+# Test
+cargo test
+
+# Format and lint
+cargo fmt
+cargo clippy
+
+# Build release
+cargo build --release
+```
+
+## Installation
+
+```bash
+# Install locally
+cargo install --path .
+
+# Build and copy to system
+cargo build --release
+cp target/release/batteryctl /usr/local/bin/
+```
+
+## Usage
+
+```bash
+# Show help
+batteryctl --help
+
+# Show version
+batteryctl --version
+```

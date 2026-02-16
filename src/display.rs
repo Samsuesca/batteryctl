@@ -9,15 +9,17 @@ use colored::Colorize;
 
 pub fn print_status(info: &BatteryInfo, detailed: bool) {
     let width = 57;
-    let border = format!("+{}+", "-".repeat(width));
+    let border_top = format!("╭{}╮", "─".repeat(width));
+    let border_mid = format!("├{}┤", "─".repeat(width));
+    let border_bot = format!("╰{}╯", "─".repeat(width));
 
-    println!("{}", border);
+    println!("{}", border_top);
     println!(
-        "|{:^width$}|",
+        "│{:^width$}│",
         "BATTERY STATUS".bold(),
         width = width
     );
-    println!("{}", border);
+    println!("{}", border_mid);
 
     // Level with color
     let level_str = format!("{}%", info.level);
@@ -27,7 +29,7 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
         31..=79 => level_str.green(),
         _ => level_str.bright_green().bold(),
     };
-    println!("| {:<20} {:>34} |", "Level:", level_colored);
+    println!("│ {:<20} {:>34} │", "Level:", level_colored);
 
     // State
     let state_str = match info.state {
@@ -37,20 +39,20 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
         ChargingState::NotCharging => "Not Charging".white().to_string(),
         ChargingState::Unknown => "Unknown".dimmed().to_string(),
     };
-    println!("| {:<20} {:>34} |", "State:", state_str);
+    println!("│ {:<20} {:>34} │", "State:", state_str);
 
     // Time remaining
     match info.state {
         ChargingState::Charging => {
             println!(
-                "| {:<20} {:>34} |",
+                "│ {:<20} {:>34} │",
                 "Time to Full:",
                 info.time_remaining_display()
             );
         }
         ChargingState::Discharging => {
             println!(
-                "| {:<20} {:>34} |",
+                "│ {:<20} {:>34} │",
                 "Time Remaining:",
                 info.time_remaining_display()
             );
@@ -65,11 +67,11 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
         } else {
             format!("{:.1}W", power)
         };
-        println!("| {:<20} {:>34} |", "Power Draw:", power_str);
+        println!("│ {:<20} {:>34} │", "Power Draw:", power_str);
     }
 
     if detailed {
-        println!("| {:>55} |", "");
+        println!("│ {:>55} │", "");
 
         // Health
         let condition_str = match info.condition {
@@ -79,7 +81,7 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
             BatteryCondition::Poor => "Poor".red().bold().to_string(),
             BatteryCondition::Unknown => "Unknown".dimmed().to_string(),
         };
-        println!("| {:<20} {:>34} |", "Health:", condition_str);
+        println!("│ {:<20} {:>34} │", "Health:", condition_str);
 
         // Max capacity
         if let Some(health) = info.health_percent() {
@@ -89,14 +91,14 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
                 }
                 _ => format!("{:.0}%", health),
             };
-            println!("| {:<20} {:>34} |", "Max Capacity:", cap_str);
+            println!("│ {:<20} {:>34} │", "Max Capacity:", cap_str);
         }
 
         // Cycle count
         if let Some(cycles) = info.cycle_count {
             let remaining = info.estimated_remaining_cycles().unwrap_or(0);
             println!(
-                "| {:<20} {:>34} |",
+                "│ {:<20} {:>34} │",
                 "Cycle Count:",
                 format!("{} / 1,000 (~{} remaining)", cycles, remaining)
             );
@@ -109,20 +111,20 @@ pub fn print_status(info: &BatteryInfo, detailed: bool) {
             } else {
                 format!("{:.0}C", temp)
             };
-            println!("| {:<20} {:>34} |", "Temperature:", temp_str);
+            println!("│ {:<20} {:>34} │", "Temperature:", temp_str);
         }
 
         // Voltage
         if let Some(voltage) = info.voltage_mv {
             println!(
-                "| {:<20} {:>34} |",
+                "│ {:<20} {:>34} │",
                 "Voltage:",
                 format!("{:.1} mV", voltage)
             );
         }
     }
 
-    println!("{}", border);
+    println!("{}", border_bot);
 }
 
 // ── Health Report Display ──────────────────────────────────────────────
@@ -132,35 +134,36 @@ pub fn print_health_report(report: &HealthReport) {
     println!();
 
     let width = 44;
-    let border = format!("+{}+", "-".repeat(width));
+    let border_top = format!("╭{}╮", "─".repeat(width));
+    let border_bot = format!("╰{}╯", "─".repeat(width));
 
-    println!("{}", border);
+    println!("{}", border_top);
 
     if let Some(design) = report.design_capacity_mah {
-        println!("| {:<24} {:>17} |", "Design Capacity:", format!("{} mAh", design));
+        println!("│ {:<24} {:>17} │", "Design Capacity:", format!("{} mAh", design));
     }
     if let Some(max) = report.max_capacity_mah {
-        println!("| {:<24} {:>17} |", "Current Max:", format!("{} mAh", max));
+        println!("│ {:<24} {:>17} │", "Current Max:", format!("{} mAh", max));
     }
     if let (Some(loss), Some(pct)) = (report.capacity_loss_mah, report.capacity_loss_percent) {
         let loss_str = format!("-{} mAh (-{:.0}%)", loss, pct);
-        println!("| {:<24} {:>17} |", "Capacity Loss:", loss_str);
+        println!("│ {:<24} {:>17} │", "Capacity Loss:", loss_str);
     }
 
-    println!("| {:>42} |", "");
+    println!("│ {:>42} │", "");
 
     if let Some(cycles) = report.cycle_count {
-        println!("| {:<24} {:>17} |", "Cycle Count:", cycles);
+        println!("│ {:<24} {:>17} │", "Cycle Count:", cycles);
     }
     if let Some(remaining) = report.estimated_remaining_cycles {
         println!(
-            "| {:<24} {:>17} |",
+            "│ {:<24} {:>17} │",
             "Est. Remaining:",
             format!("{} cycles", remaining)
         );
     }
 
-    println!("| {:>42} |", "");
+    println!("│ {:>42} │", "");
 
     let condition_display = match report.condition.as_str() {
         "Normal" => "Normal".green().to_string(),
@@ -168,16 +171,16 @@ pub fn print_health_report(report: &HealthReport) {
         "Replace" => "Replace".red().to_string(),
         _ => report.condition.clone(),
     };
-    println!("| {:<24} {:>17} |", "Condition:", condition_display);
+    println!("│ {:<24} {:>17} │", "Condition:", condition_display);
 
     if let Some(ref date) = report.manufacture_date {
-        println!("| {:<24} {:>17} |", "Manufactured:", date);
+        println!("│ {:<24} {:>17} │", "Manufactured:", date);
     }
     if let Some(ref age) = report.age_description {
-        println!("| {:<24} {:>17} |", "Age:", age);
+        println!("│ {:<24} {:>17} │", "Age:", age);
     }
 
-    println!("{}", border);
+    println!("{}", border_bot);
 
     // Capacity trend chart
     if !report.capacity_trend.is_empty() {
@@ -215,7 +218,7 @@ pub fn print_power_report(report: &PowerReport, detailed: bool) {
         "Est. Power".bold(),
         "% Total".bold()
     );
-    println!("  {}", "-".repeat(55));
+    println!("  {}", "─".repeat(55));
 
     let total = report.total_estimated_watts.max(0.001);
     let display_count = if detailed { report.apps.len().min(20) } else { report.apps.len().min(10) };
@@ -287,7 +290,7 @@ pub fn print_history(
         return;
     }
 
-    // ASCII chart of battery level over time
+    // Chart of battery level over time
     let levels: Vec<f64> = snapshots.iter().map(|s| s.level as f64).collect();
     print_simple_chart(&levels);
 
@@ -433,21 +436,21 @@ fn print_simple_chart(values: &[f64]) {
     for row in (0..height).rev() {
         let threshold = min_val + range * row as f64 / (height - 1) as f64;
         let label = format!("{:>5.0}%", threshold);
-        print!("  {} |", label);
+        print!("  {} │", label);
 
         for val in &sampled {
             if *val >= threshold {
-                print!("#");
+                print!("█");
             } else {
-                print!(" ");
+                print!("░");
             }
         }
         println!();
     }
 
-    print!("  {:>5} +", "");
+    print!("  {:>5} ╰", "");
     for _ in 0..sampled.len() {
-        print!("-");
+        print!("─");
     }
     println!();
 }

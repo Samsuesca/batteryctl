@@ -1,0 +1,40 @@
+{
+  "name": "batteryctl",
+  "version": "1.0.1",
+  "previous_versions": ["0.1.0"],
+  "edition": "2021",
+  "target": "aarch64-apple-darwin",
+  "repository": "https://github.com/Samsuesca/batteryctl",
+  "author": "Angel Samuel Suesca Rios <suescapsam@gmail.com>",
+  "build": {
+    "lto": true,
+    "strip": true,
+    "opt_level": 3,
+    "codegen_units": 1,
+    "panic": "abort",
+    "binary_size": "2.6 MB"
+  },
+  "platform": {
+    "primary": "macOS (Apple Silicon M3)",
+    "supported": ["macOS (Apple Silicon)", "macOS (Intel)", "Linux"]
+  },
+  "features": [
+    "Battery status monitoring with watch mode",
+    "Health report with degradation trends",
+    "Power consumption analysis per app",
+    "Historical data with SQLite",
+    "Optimization suggestions",
+    "Alert daemon with macOS notifications"
+  ],
+  "changelog": {
+    "1.0.1": [
+      "Optimized sysinfo refresh for Apple Silicon M3 (500ms -> 200ms)",
+      "Fixed TDP estimation from 30W to 22W for M3",
+      "Implemented macOS power draw detection via system_profiler",
+      "Added codegen-units=1 and panic=abort for smaller binary",
+      "Upgraded display to Unicode rounded box drawing",
+      "Added comprehensive help text with examples to all subcommands",
+      "Added versions.json for version tracking"
+    ]
+  }
+}
